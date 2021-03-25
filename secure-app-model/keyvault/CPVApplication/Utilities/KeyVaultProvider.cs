@@ -6,12 +6,11 @@
 
 namespace CPVApplication.Utilities
 {
+    using Azure.Identity;
+    using Azure.Security.KeyVault.Secrets;
+    using System;
     using System.Configuration;
-    using System.Net.Http;
     using System.Threading.Tasks;
-    using Microsoft.Azure.KeyVault;
-    using Microsoft.Azure.KeyVault.Models;
-    using Newtonsoft.Json.Linq;
 
     /// <summary>
     /// Provider for accessing secrets from the Azure KeyVault
@@ -19,14 +18,14 @@ namespace CPVApplication.Utilities
     public class KeyVaultProvider
     {
         /// <summary>
-        /// The client used to perform HTTP operations. 
-        /// </summary>
-        private static readonly HttpClient httpClient = new HttpClient();
-
-        /// <summary>
         /// The base address for the instance of Azure Key Vault.
         /// </summary>
         private readonly string BaseUrl = ConfigurationManager.AppSettings["KeyVaultEndpoint"];
+
+        /// <summary>
+        /// The identifier for the Azure AD application configured to access the instance of Azure Key Vault.
+        /// </summary>
+        private readonly string KeyVaultTenantId = ConfigurationManager.AppSettings["ida:KeyVaultTenantId"];
 
         /// <summary>
         /// The identifier for the Azure AD application configured to access the instance of Azure Key Vault.
@@ -41,14 +40,18 @@ namespace CPVApplication.Utilities
         /// <summary>
         /// The client used to interact with the instance of Azure Key Vault.
         /// </summary>
-        private readonly KeyVaultClient keyVaultClient;
+        private readonly SecretClient secretClient;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="KeyVaultProvider" /> class.
         /// </summary>
         public KeyVaultProvider()
         {
-            keyVaultClient = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(GetToken), httpClient);
+            secretClient = new SecretClient(new Uri(BaseUrl),
+                new ClientSecretCredential(
+                    KeyVaultTenantId,
+                    KeyVaultClientId,
+                    KeyVaultClientSecret));
         }
 
         /// <summary>
@@ -58,14 +61,8 @@ namespace CPVApplication.Utilities
         /// <returns>The value retrieved from the vault.</returns>
         public async Task<string> GetSecretAsync(string key)
         {
-            SecretBundle secret = await keyVaultClient.GetSecretAsync(BaseUrl, key.Replace("@", string.Empty).Replace(".", string.Empty)).ConfigureAwait(false);
+            KeyVaultSecret secret = await secretClient.GetSecretAsync(key.Replace("@", string.Empty).Replace(".", string.Empty)).ConfigureAwait(false);
             return secret.Value;
-        }
-
-        private async Task<string> GetToken(string authority, string resource, string scope)
-        {
-            JObject tokenResult = await AuthorizationUtilities.GetADAppToken(authority, resource, KeyVaultClientId, KeyVaultClientSecret);
-            return tokenResult["access_token"].ToString();
         }
     }
 }
