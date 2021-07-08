@@ -23,7 +23,7 @@ namespace CPVApplication
          * The following code assumes that the context of the partner is pre-determined by some external process.
          */
 
-        private static readonly string AADInstance = ConfigurationManager.AppSettings["AADInstance"];
+        private static readonly string AADInstance = ConfigurationManager.AppSettings["ida:AADInstance"];
         private static readonly string CPVApplicationId = ConfigurationManager.AppSettings["ida:CPVApplicationId"];
         private static readonly string CPVApplicationSecret = ConfigurationManager.AppSettings["ida:CPVApplicationSecret"];
 

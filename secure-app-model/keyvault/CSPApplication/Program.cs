@@ -35,7 +35,7 @@ namespace CSPApplication
          * The following code assumes that the context of the partner is pre-determined by some external process.
          */
 
-        private static readonly string AADInstance = ConfigurationManager.AppSettings["AADInstance"];
+        private static readonly string AADInstance = ConfigurationManager.AppSettings["ida:AADInstance"];
         private static readonly string CSPApplicationId = ConfigurationManager.AppSettings["ida:CSPApplicationId"];
         private static readonly string CSPApplicationSecret = ConfigurationManager.AppSettings["ida:CSPApplicationSecret"];
 
